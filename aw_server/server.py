@@ -14,6 +14,8 @@ from flask import (
 )
 from flask_cors import CORS
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
 from . import rest
 from .api import ServerAPI
 from .custom_static import get_custom_static_blueprint
@@ -26,6 +28,8 @@ static_folder = os.path.join(app_folder, "static")
 
 root = Blueprint("root", __name__, url_prefix="/")
 
+def check_active_time():
+    print("Scheduler is alive!")
 
 class AWFlask(Flask):
     def __init__(
@@ -63,6 +67,11 @@ class AWFlask(Flask):
         self.register_blueprint(root)
         self.register_blueprint(rest.blueprint)
         self.register_blueprint(get_custom_static_blueprint(custom_static))
+
+        # setup app scheduler
+        sched = BackgroundScheduler(daemon=True)
+        sched.add_job(check_active_time, 'interval', minutes=5)
+        sched.start()
 
 
 class CustomJSONProvider(flask.json.provider.DefaultJSONProvider):
